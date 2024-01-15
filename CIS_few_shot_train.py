@@ -14,7 +14,7 @@ if __name__ == "__main__":
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
-
+    
     CIStoken = [
         "a photo of precast component",
         "a photo of a precast component delivery truck",
@@ -28,7 +28,7 @@ if __name__ == "__main__":
         "a photo of a wheel loader",
     ]
     device = "cuda:0"
-    clip_model, preprocess = clip.load("ViT-B/32", device=device)
+    clip_model, preprocess = clip.load("ViT-B/16", device=device)
 
     # shot
     train_tranform = transforms.Compose(
@@ -65,7 +65,7 @@ if __name__ == "__main__":
         dataloader=dataloader_shot,
         classnames=CIStoken,
         alpha=5,
-        beta=6,
+        beta=1,
         augment_epoch=10,
     )
 
@@ -83,20 +83,34 @@ if __name__ == "__main__":
     clip_adapter.search_hp(search_scale=[20, 50], search_step=[200, 20])
 
     # train
-    torch.set_printoptions(precision=1,sci_mode=False)
+    train_tranform = transforms.Compose(
+        [
+            transforms.RandomResizedCrop(
+                size=224,
+                scale=(0.5, 1),
+                interpolation=transforms.InterpolationMode.BICUBIC,
+            ),
+            transforms.RandomHorizontalFlip(p=0.5),
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=(0.48145466, 0.4578275, 0.40821073),
+                std=(0.26862954, 0.26130258, 0.27577711),
+            ),
+        ]
+    )
+    torch.set_printoptions(precision=2,sci_mode=False)
     dataset_train = CoCoDataset(
         coco_json=coco_json_shot,
         imgs_path=imgs_path_shot,
         transform=train_tranform,
         random_seed=5200,
-        ratio=1,
+        ratio=0.1,
         category_init_id=0,
     )
     dataloader_train = DataLoader(
         dataset=dataset_train, num_workers=12, batch_size=256, shuffle=True
     )
-    clip_adapter.train_keys(dataloader_train,epoch=5,alpha_train=False)
-    clip_adapter.train_keys(dataloader_train,epoch=10,alpha_train=True,beta_train=False,search_hp=False)
+    clip_adapter.train_keys(dataloader_train,epoch=20,alpha_train=True,search_hp=False)
 
     # test
     coco_json_test = os.path.join(anno_path, "test.json")
@@ -118,3 +132,27 @@ if __name__ == "__main__":
     print(precision)
     print(recall)
     print(f1)
+
+
+    # clip_adapter.train_keys(dataloader_train,dataloader_eval=dataloader_val,epoch=10,alpha_train=True,beta_train=False,search_hp=False)
+
+    # # test
+    # coco_json_test = os.path.join(anno_path, "test.json")
+    # imgs_path_test = os.path.join(img_path, "test")
+    # dataset_test = CoCoDataset(
+    #     coco_json=coco_json_test,
+    #     imgs_path=imgs_path_test,
+    #     transform=preprocess,
+    #     category_init_id=0,
+    # )
+    # dataloader_test = DataLoader(dataset=dataset_test, num_workers=12, batch_size=32)
+    # clip_adapter.pre_load_features(dataloader=dataloader_test)
+    # (
+    #     all_predictions,
+    #     all_targets,
+    #     (accuracy, precision, recall, f1),
+    # ) = clip_adapter.eval()
+    # print("\n**** Few-shot CLIP's val accuracy: {:.2f}. ****\n".format(accuracy * 100))
+    # print(precision)
+    # print(recall)
+    # print(f1)

@@ -3,9 +3,11 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+ClipAdapter/
+*.png
+
 # C extensions
 *.so
-ClipAdapter/
 # Distribution / packaging
 .Python
 build/

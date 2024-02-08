@@ -28,7 +28,7 @@ if __name__ == "__main__":
         "a photo of a wheel loader",
     ]
     device = "cuda:0"
-    clip_model, preprocess = clip.load("ViT-L/14", device=device)
+    clip_model, preprocess = clip.load("ViT-B/32", device=device)
 
     # shot
     train_tranform = transforms.Compose(

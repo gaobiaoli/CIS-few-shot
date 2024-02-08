@@ -5,7 +5,6 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from sklearn import metrics
 from ClipAdapter.dataset import CoCoDataset
-
 if __name__ == "__main__":
     img_path = "/CV/gaobiaoli/dataset/CIS-Dataset"
     anno_path = "/CV/gaobiaoli/dataset/CIS-Dataset/dataset/annotations"
@@ -28,8 +27,8 @@ if __name__ == "__main__":
         "a photo of a road roller",
         "a photo of a wheel loader",
     ]
-    device = "cuda:0"
-    clip_model, preprocess = clip.load("ViT-L/14", device=device)
+    device = "cuda:1"
+    clip_model, preprocess = clip.load("ViT-B/32", device=device)
 
     coco_json_test = os.path.join(anno_path, "test.json")
     imgs_path_test = os.path.join(img_path, "test")
@@ -70,3 +69,7 @@ if __name__ == "__main__":
     print(precision)
     print(recall)
     print(f1)
+
+    import pickle
+    with open('zero-shot-b32.pkl', 'wb') as f:
+        pickle.dump([all_targets, all_predictions], f)

@@ -1,6 +1,7 @@
 import os
 import clip
 import torch
+import pickle
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from ClipAdapter import CoCoDataset, ClipAdapter
@@ -83,7 +84,7 @@ if __name__ == "__main__":
     )
     clip_adapter.pre_load_features(dataloader=dataloader_val)
     # clip_adapter.search_hp(search_scale=[20, 50], search_step=[200, 20])
-    clip_adapter.search_hp(search_scale=[20, 50], search_step=[200, 20])
+    clip_adapter.search_hp(search_scale=[20, 50], search_step=[200, 20],beta_search=True)
 
     # test
     coco_json_test = os.path.join(anno_path, "test.json")
@@ -104,7 +105,8 @@ if __name__ == "__main__":
     print(precision)
     print(recall)
     print(f1)
-
+    with open("./result/B32-zero.pkl","wb") as fp:
+        pickle.dump([all_predictions,all_targets],fp)
     all_predictions, all_targets, (accuracy, precision, recall, f1) = clip_adapter.eval(
         adapt=True
     )
@@ -112,3 +114,5 @@ if __name__ == "__main__":
     print(precision)
     print(recall)
     print(f1)
+    with open("./result/B32-few.pkl","wb") as fp:
+        pickle.dump([all_predictions,all_targets],fp)

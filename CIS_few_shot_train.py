@@ -28,7 +28,7 @@ if __name__ == "__main__":
         "a photo of a wheel loader",
     ]
     device = "cuda:0"
-    clip_model, preprocess = clip.load("ViT-B/16", device=device)
+    clip_model, preprocess = clip.load("ViT-L/14", device=device)
 
     # shot
     train_tranform = transforms.Compose(
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     )
     dataloader_val = DataLoader(dataset=dataset_val, num_workers=12, batch_size=32)
     clip_adapter.pre_load_features(dataloader=dataloader_val)
-    clip_adapter.search_hp(search_scale=[20, 50], search_step=[200, 20])
+    clip_adapter.search_hp(search_scale=[20, 50], search_step=[200, 20],beta_search=False)
 
     # train
     train_tranform = transforms.Compose(
@@ -132,27 +132,8 @@ if __name__ == "__main__":
     print(precision)
     print(recall)
     print(f1)
-
-
-    # clip_adapter.train_keys(dataloader_train,dataloader_eval=dataloader_val,epoch=10,alpha_train=True,beta_train=False,search_hp=False)
-
-    # # test
-    # coco_json_test = os.path.join(anno_path, "test.json")
-    # imgs_path_test = os.path.join(img_path, "test")
-    # dataset_test = CoCoDataset(
-    #     coco_json=coco_json_test,
-    #     imgs_path=imgs_path_test,
-    #     transform=preprocess,
-    #     category_init_id=0,
-    # )
-    # dataloader_test = DataLoader(dataset=dataset_test, num_workers=12, batch_size=32)
-    # clip_adapter.pre_load_features(dataloader=dataloader_test)
-    # (
-    #     all_predictions,
-    #     all_targets,
-    #     (accuracy, precision, recall, f1),
-    # ) = clip_adapter.eval()
-    # print("\n**** Few-shot CLIP's val accuracy: {:.2f}. ****\n".format(accuracy * 100))
-    # print(precision)
-    # print(recall)
-    # print(f1)
+    if True:
+        clip_adapter.save("./weight/L14.pth")
+        import pickle
+        with open("./result/L14-train.pkl","wb") as fp:
+            pickle.dump([all_predictions,all_targets],fp)

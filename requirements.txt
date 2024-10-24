@@ -1,0 +1,5 @@
+scikit-image==0.21.0
+scikit-learn==1.3.0
+scipy==1.10.0
+seaborn==0.12.2
+clip @ git+https://github.com/openai/CLIP.git@a1d071733d7111c9c014f024669f959182114e33

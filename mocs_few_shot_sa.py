@@ -5,27 +5,38 @@ import pickle
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from ClipAdapter import CoCoDataset, ClipAdapter
-from utils.utils import init_random, get_dataloader
-import argparse 
+import argparse
+from utils.utils import get_dataloader, init_random
+
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="Save model output to a file with a safe filename.")
-    parser.add_argument('--model_name', type=str, required=False, default="ViT-B/32",help="The name of the model (e.g., 'vit_l/14')")
+    parser = argparse.ArgumentParser(
+        description="Save model output to a file with a safe filename."
+    )
+    parser.add_argument(
+        "--model_name",
+        type=str,
+        required=False,
+        default="ViT-B/32",
+        help="The name of the model (e.g., 'vit_l/14')",
+    )
     args = parser.parse_args()
     model_name = args.model_name
-
     init_random(1)
-    CIStoken = [
-        "a photo of precast component",
-        "a photo of a precast component delivery truck",
-        "a photo of a bulldozer",
-        "a photo of a dump truck",
+    mocstoken = [
+        "a photo of a worker",
+        "a photo of a tower crane",
+        "a photo of a hanging hook",
+        "a photo of a vehicle crane",
+        "a photo of a roller compactor",
+        "a photo of a bulldozer or crawler",
         "a photo of an excavator",
-        "a photo of a concrete mixer",
-        "a photo of a person wearing safety helmet correctly",
-        "a photo of a person who do not wear safety helmet correctly",
-        "a photo of a road roller",
-        "a photo of a wheel loader",
+        "a photo of a truck",
+        "a photo of a loader",
+        "a photo of a concrete pump truck",
+        "a photo of a concrete mixer truck",
+        "a photo of a pile driver",
+        "a photo of a household vehicle",
     ]
     device = "cuda:0"
     clip_model, preprocess = clip.load(model_name, device=device)
@@ -46,24 +57,32 @@ if __name__ == "__main__":
             ),
         ]
     )
-    dataloader_shot,dataloader_val,dataloader_test=get_dataloader('CIS',train_batch_size=4,train_tranform=train_tranform,seed=5200)
-    
+
+    dataloader_shot, dataloader_val, dataloader_test = get_dataloader(
+        "mocs",
+        train_tranform=train_tranform,
+        train_batch_size=4,
+        train_shuffle=False,
+        seed=34,
+    )
+
     clip_adapter = ClipAdapter(
         clip_model,
         device=device,
         dataloader=dataloader_shot,
-        classnames=CIStoken,
+        classnames=mocstoken,
         alpha=5,
         beta=6,
         augment_epoch=10,
     )
 
-    # val
-    clip_adapter.pre_load_features(dataloader=dataloader_val)
-    clip_adapter.search_hp(search_scale=[20, 50], search_step=[200, 20],beta_search=True)
-
-    # test
     clip_adapter.pre_load_features(dataloader=dataloader_test)
+    beta, alpha ,_ = clip_adapter.search_hp(
+        search_scale=[20, 50], search_step=[200, 20], beta_search=True
+    )
+    clip_adapter.search_hp(
+        search_scale=[20, 51.1], search_step=[200, 51], beta_search=False,print_log=True
+    )
 
     all_predictions, all_targets, (accuracy, precision, recall, f1) = clip_adapter.eval(
         adapt=False
@@ -72,7 +91,7 @@ if __name__ == "__main__":
     print(precision)
     print(recall)
     print(f1)
-    
+
     all_predictions, all_targets, (accuracy, precision, recall, f1) = clip_adapter.eval(
         adapt=True
     )
@@ -80,5 +99,3 @@ if __name__ == "__main__":
     print(precision)
     print(recall)
     print(f1)
-    # with open("./result/B32-few.pkl","wb") as fp:
-    #     pickle.dump([all_predictions,all_targets],fp)

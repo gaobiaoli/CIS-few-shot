@@ -8,12 +8,12 @@ import argparse
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Save model output to a file with a safe filename.")
-    parser.add_argument('--model_name', type=str, required=True, default="ViT-B/32",help="The name of the model (e.g., 'vit_l/14')")
+    parser.add_argument('--model_name', type=str, required=False, default="ViT-B/32",help="The name of the model (e.g., 'vit_l/14')")
     args = parser.parse_args()
     model_name = args.model_name
 
-    img_path = "/CV/gaobiaoli/dataset/CIS-Dataset"
-    anno_path = "/CV/gaobiaoli/dataset/CIS-Dataset/dataset/annotations"
+    img_path = "/CV/gaobiaoli/dataset/mocs"
+    anno_path = "/CV/gaobiaoli/dataset/mocs"
     seed = 1
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
@@ -21,17 +21,20 @@ if __name__ == "__main__":
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
     
-    CIStoken = [
-        "a photo of a precast component",
-        "a photo of a precast component delivery truck",
-        "a photo of a bulldozer",
-        "a photo of a dump truck",
+    mocstoken = [
+        "a photo of a worker",
+        "a photo of a tower crane",
+        "a photo of a hanging hook",
+        "a photo of a vehicle crane",
+        "a photo of a roller compactor",
+        "a photo of a bulldozer or crawler",
         "a photo of an excavator",
-        "a photo of a concrete mixer",
-        "a photo of a person wearing safety helmet correctly",
-        "a photo of a person who do not wear safety helmet correctly",
-        "a photo of a road roller",
-        "a photo of a wheel loader",
+        "a photo of a truck",
+        "a photo of a loader",
+        "a photo of a concrete pump truck",
+        "a photo of a concrete mixer truck",
+        "a photo of a pile driver",
+        "a photo of a household vehicle",
     ]
     device = "cuda:0"
     clip_model, preprocess = clip.load(model_name, device=device)
@@ -52,15 +55,15 @@ if __name__ == "__main__":
             ),
         ]
     )
-    coco_json_shot = os.path.join(anno_path, "train.json")
-    imgs_path_shot = os.path.join(img_path, "train")
+    coco_json_shot = os.path.join(anno_path, "instances_train.json")
+    imgs_path_shot = os.path.join(img_path, "images/train")
     dataset_shot = CoCoDataset(
         coco_json=coco_json_shot,
         imgs_path=imgs_path_shot,
         transform=train_tranform,
         few_shot=16,
-        random_seed=5200,
-        category_init_id=0,
+        random_seed=34,
+        category_init_id=1,
     )
     dataloader_shot = DataLoader(
         dataset=dataset_shot, num_workers=4, batch_size=4, shuffle=False
@@ -69,20 +72,20 @@ if __name__ == "__main__":
         clip_model,
         device=device,
         dataloader=dataloader_shot,
-        classnames=CIStoken,
+        classnames=mocstoken,
         alpha=5,
         beta=1,
         augment_epoch=10,
     )
 
     # val
-    coco_json_val = os.path.join(anno_path, "val.json")
-    imgs_path_val = os.path.join(img_path, "val")
+    coco_json_val = os.path.join(anno_path, "instances_val.json")
+    imgs_path_val = os.path.join(img_path, "images/val")
     dataset_val = CoCoDataset(
         coco_json=coco_json_val,
         imgs_path=imgs_path_val,
         transform=preprocess,
-        category_init_id=0,
+        category_init_id=1,
     )
     dataloader_val = DataLoader(dataset=dataset_val, num_workers=12, batch_size=32)
     clip_adapter.pre_load_features(dataloader=dataloader_val)
@@ -111,7 +114,7 @@ if __name__ == "__main__":
         transform=train_tranform,
         random_seed=5200,
         ratio=0.1,
-        category_init_id=0,
+        category_init_id=1,
     )
     dataloader_train = DataLoader(
         dataset=dataset_train, num_workers=12, batch_size=256, shuffle=True
@@ -119,13 +122,13 @@ if __name__ == "__main__":
     clip_adapter.train_keys(dataloader_train,epoch=20,alpha_train=True,search_hp=False)
 
     # test
-    coco_json_test = os.path.join(anno_path, "test.json")
-    imgs_path_test = os.path.join(img_path, "test")
+    coco_json_test = os.path.join(anno_path, "instances_val.json")
+    imgs_path_test = os.path.join(img_path, "images/val")
     dataset_test = CoCoDataset(
         coco_json=coco_json_test,
         imgs_path=imgs_path_test,
         transform=preprocess,
-        category_init_id=0,
+        category_init_id=1,
     )
     dataloader_test = DataLoader(dataset=dataset_test, num_workers=12, batch_size=32)
     clip_adapter.pre_load_features(dataloader=dataloader_test)

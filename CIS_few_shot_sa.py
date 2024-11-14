@@ -54,17 +54,19 @@ if __name__ == "__main__":
         dataloader=dataloader_shot,
         classnames=CIStoken,
         alpha=5,
-        beta=6,
+        beta=16,
         augment_epoch=10,
     )
 
     # val
     clip_adapter.pre_load_features(dataloader=dataloader_val)
     clip_adapter.search_hp(search_scale=[20, 50], search_step=[200, 20],beta_search=True)
-
+    clip_adapter.search_hp(
+        search_scale=[20, 51.1], search_step=[200, 102], beta_search=False,print_log=True,inplace=False
+    )
     # test
     clip_adapter.pre_load_features(dataloader=dataloader_test)
-
+    
     all_predictions, all_targets, (accuracy, precision, recall, f1) = clip_adapter.eval(
         adapt=False
     )

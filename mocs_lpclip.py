@@ -72,7 +72,8 @@ for c_weight in search_list:
     pred = clf.predict(fewshot_val_feature)
     acc_val = sum(pred == fewshot_val_label) / len(fewshot_val_label)
     acc_list.append(acc_val)
-print(acc_list)
+print("Test accuracy : {:.2f}".format(max(acc_list)*100), flush=True)
+
 # all_targets = []
 # all_predictions = []
 # with torch.no_grad():

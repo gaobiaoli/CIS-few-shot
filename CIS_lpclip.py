@@ -80,12 +80,12 @@ test_label = label_list
 clf_left = LogisticRegression(solver="lbfgs", max_iter=1000, penalty="l2", C=c_left).fit(fewshot_train_feature, fewshot_train_label)
 pred_left = clf_left.predict(fewshot_val_feature)
 acc_left = sum(pred_left == fewshot_val_label) / len(fewshot_val_label)
-print("Val accuracy (Left): {:.2f}".format(100 * acc_left), flush=True)
+# print("Val accuracy (Left): {:.2f}".format(100 * acc_left), flush=True)
 
 clf_right = LogisticRegression(solver="lbfgs", max_iter=1000, penalty="l2", C=c_right).fit(fewshot_train_feature, fewshot_train_label)
 pred_right = clf_right.predict(fewshot_val_feature)
 acc_right = sum(pred_right == fewshot_val_label) / len(fewshot_val_label)
-print("Val accuracy (Right): {:.2f}".format(100 * acc_right), flush=True)
+# print("Val accuracy (Right): {:.2f}".format(100 * acc_right), flush=True)
 
 # find maximum and update ranges
 if acc_left < acc_right:
@@ -103,4 +103,4 @@ else:
 
 pred = clf_final.predict(test_feature)
 test_acc = 100 * sum(pred == test_label) / len(pred)
-print(test_acc)
+print("Test accuracy : {:.2f}".format(test_acc), flush=True)

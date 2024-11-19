@@ -67,10 +67,10 @@ optimizer = torch.optim.SGD(
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
     optimizer, T_max=50,last_epoch=-1,eta_min=0.005*0.01
 )
-for epoch in range(30):
+for epoch in tqdm(range(30),desc="Epoch: 50"):
     all_targets = []
     all_predictions = []
-    for i, (images, target, _) in enumerate(tqdm(dataloader_shot)):
+    for i, (images, target, _) in enumerate(dataloader_shot):
         images, target = images.to(device), target.to(device)
         logits=coop(images)
         loss = F.cross_entropy(logits, target)
@@ -83,7 +83,6 @@ for epoch in range(30):
         all_predictions.extend(pred_label.cpu().numpy())
     scheduler.step()
     acc = metrics.accuracy_score(all_targets, all_predictions)
-    print(f'{epoch}:{acc*100}%')
 
 all_targets = []
 all_predictions = []
